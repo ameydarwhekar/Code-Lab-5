@@ -1,0 +1,52 @@
+version: '3.9'
+
+
+services:
+  api:
+    build: ./api/ #Use build not image as we will be changing it by adding flask
+    hostname: api #Optional
+    volumes:
+      - ./api/code:/app
+    ports:
+    - "5000:5000"
+
+  consumer:
+    build: ./consumer/ #Use build not image as we will be changing it by adding flask
+    hostname: consumer #Optional
+    environment:
+      - API_HOST=${API_HOST}
+      - API_PORT=${API_PORT}
+      - API_ENDPOINT=${API_ENDPOINT}
+    volumes:
+      - ./consumer/code:/app
+    ports:
+    - "81:81"
+    
+  db_admin:
+    image: dpage/pgadmin4
+    hostname: dba
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PG_ADMIN_NAME}
+      - PGADMIN_DEFAULT_PASSWORD=${PG_ADMIN_PASS}
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - "${PG_ADMIN_PORT}:${PG_ADMIN_PORT}"
+
+  db:
+    image: postgres:latest
+    hostname: db
+    environment:
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_PASSWORD=${PG_PASS}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - data:/var/lib/postgresql
+      - ./db/init:/docker-entrypoint-initdb.d
+      # - ./var/pgdata:/var/lib/postgresql/data
+    ports:
+      - "${PG_PORT}:${PG_PORT}"
+
+volumes:
+  data:
+  pgadmin:
